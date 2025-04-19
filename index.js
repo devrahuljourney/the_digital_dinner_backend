@@ -9,8 +9,9 @@ const database = require("./config/database");
 const { cloudinaryConnect } = require("./config/cloudinary");
 const initPgSchema = require("./models/initPgSchema");
 const categoryRoute = require("./routes/Category")
+const productRoute = require("./routes/Product")
 
-dotenv.config(); // ✅ Now works fine
+dotenv.config(); 
 const PORT = process.env.PORT || 4000;
 
 // Connect to databases
@@ -43,6 +44,7 @@ cloudinaryConnect();
 
 // Routes
 app.use("/api/v1/category", categoryRoute);
+app.use("/api/v1/product",productRoute)
 
 // Default route
 app.get("/", (req, res) => {
