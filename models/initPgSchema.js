@@ -1,18 +1,18 @@
-const pool = require("../config/database"); 
+const { pgPool } = require("../config/database");
 
 const initPgSchema = async () => {
+const pool = pgPool()
+
   try {
-    // Users Table
     await pool.query(`
       CREATE TABLE IF NOT EXISTS users (
         id SERIAL PRIMARY KEY,
         name VARCHAR(100) NOT NULL,
         phone VARCHAR(15) UNIQUE NOT NULL,
-        email VARCHAR(50) UNIQUE NOT NULL,
+        email VARCHAR(50) UNIQUE 
       );
     `);
 
-    // Orders Table
     await pool.query(`
       CREATE TABLE IF NOT EXISTS orders (
         id SERIAL PRIMARY KEY,
@@ -23,7 +23,6 @@ const initPgSchema = async () => {
       );
     `);
 
-    // Order Items Table
     await pool.query(`
       CREATE TABLE IF NOT EXISTS order_items (
         id SERIAL PRIMARY KEY,

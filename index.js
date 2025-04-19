@@ -7,17 +7,26 @@ const cors = require("cors");
 
 const database = require("./config/database");
 const { cloudinaryConnect } = require("./config/cloudinary");
+const categoryRoute = require("./routes/Category");
+const productRoute = require("./routes/Product");
+const orderRoute = require("./routes/Order");
 const initPgSchema = require("./models/initPgSchema");
-const categoryRoute = require("./routes/Category")
-const productRoute = require("./routes/Product")
 
 dotenv.config(); 
 const PORT = process.env.PORT || 4000;
 
-// Connect to databases
+const connectSchema = async () => {
+  try {
+    await database.postgreConnect();
+    await initPgSchema(); 
+  } catch (err) {
+    console.error("❌ Error during PostgreSQL schema initialization:", err);
+    process.exit(1);  
+  }
+};
+
 database.mongoDbConnect();
-database.postgreConnect();
-initPgSchema();
+connectSchema(); 
 
 // Middlewares
 app.use(express.json());
@@ -44,7 +53,8 @@ cloudinaryConnect();
 
 // Routes
 app.use("/api/v1/category", categoryRoute);
-app.use("/api/v1/product",productRoute)
+app.use("/api/v1/product", productRoute);
+app.use("/api/v1/order", orderRoute);
 
 // Default route
 app.get("/", (req, res) => {

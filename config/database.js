@@ -1,9 +1,9 @@
-// db/connection.js
 const mongoose = require("mongoose");
 const { Pool } = require("pg");
 require("dotenv").config();
 
-// MongoDB Connection
+let pool;
+
 exports.mongoDbConnect = () => {
   mongoose
     .connect(process.env.MONGODB_URL, {
@@ -18,27 +18,28 @@ exports.mongoDbConnect = () => {
     });
 };
 
-// PostgreSQL Connection (returns a pool instance)
-let pool;
-
-exports.postgreConnect = () => {
+exports.postgreConnect = async () => {
   try {
     pool = new Pool({
-      connectionString: process.env.POSTGRESQL, 
+      connectionString: process.env.POSTGRESQL,
     });
 
-    pool.query("SELECT NOW()", (err, res) => {
-      if (err) {
-        console.error("❌ PostgreSQL connection failed", err);
-        process.exit(1);
-      } else {
-        console.log("✅ PostgreSQL connected successfully at:", res.rows[0].now);
-      }
-    });
+    await pool.query("SELECT NOW()"); 
+
+    console.log("✅ PostgreSQL connected successfully");
   } catch (error) {
-    console.error("❌ PostgreSQL setup error:", error);
-    process.exit(1);
+    console.error("❌ PostgreSQL connection failed:", error);
+    process.exit(1); 
   }
 };
 
-exports.pgPool = () => pool;
+exports.pgPool = () => {
+  try {
+    if (!pool) {
+      throw new Error("PostgreSQL pool is not initialized yet");
+    }
+    return pool;
+  } catch (error) {
+    console.log(error)
+  }
+};
