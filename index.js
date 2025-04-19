@@ -35,7 +35,7 @@ app.use(
     origin: [
       process.env.ORIGIN_URL,
       process.env.ORIGIN_URL1,
-      process.env.ORIGIN_URL2,
+      
     ],
     credentials: true,
   })

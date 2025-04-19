@@ -1,4 +1,6 @@
 const { pgPool } = require("../config/database");
+const Product = require("../models/Product");
+
 
 exports.createOrder = async (req, res) => {
     const pool = pgPool();
@@ -69,60 +71,83 @@ exports.createOrder = async (req, res) => {
   };
   
 
-exports.getOrdersByPhone = async (req, res) => {
-  const { phone } = req.params;
-
-  if (!phone) {
-    return res.status(400).json({
-      success: false,
-      message: "Phone number is required",
-    });
-  }
-
-  try {
-    const userResult = await pool.query("SELECT * FROM users WHERE phone = $1", [phone]);
-    if (userResult.rows.length === 0) {
-      return res.status(404).json({
+  
+  exports.getOrdersByPhone = async (req, res) => {
+    const pool = pgPool();
+    const { phone } = req.params;
+  
+    if (!phone) {
+      return res.status(400).json({
         success: false,
-        message: "User not found",
+        message: "Phone number is required",
       });
     }
+  
+    try {
+      const userResult = await pool.query("SELECT * FROM users WHERE phone = $1", [phone]);
+  
+      if (userResult.rows.length === 0) {
+        return res.status(404).json({
+          success: false,
+          message: "User not found",
+        });
+      }
+  
+      const userId = userResult.rows[0].id;
+  
+      const ordersResult = await pool.query(
+        "SELECT * FROM orders WHERE user_id = $1 ORDER BY created_at DESC",
+        [userId]
+      );
+  
+      if (ordersResult.rows.length === 0) {
+        return res.status(404).json({
+          success: false,
+          message: "No orders found for this user",
+        });
+      }
+  
+      const ordersWithItems = await Promise.all(
+        ordersResult.rows.map(async (order) => {
+          const orderItemsResult = await pool.query(
+            "SELECT * FROM order_items WHERE order_id = $1",
+            [order.id]
+          );
+  
+          const itemsWithProduct = await Promise.all(
+            orderItemsResult.rows.map(async (item) => {
+              try {
+                const product = await Product.findById(item.menu_item_id).lean();
+                return {
+                  ...item,
+                  product,
+                };
+              } catch (err) {
+              
+                return item;
+              }
+            })
+          );
 
-    const userId = userResult.rows[0].id;
-
-    const ordersResult = await pool.query(
-      "SELECT * FROM orders WHERE user_id = $1 ORDER BY created_at DESC",
-      [userId]
-    );
-
-    if (ordersResult.rows.length === 0) {
-      return res.status(404).json({
+          console.log("Items", itemsWithProduct)
+  
+          return {
+            ...order,
+            items: itemsWithProduct,
+          };
+        })
+      );
+  
+      return res.status(200).json({
+        success: true,
+        orders: ordersWithItems,
+      });
+    } catch (err) {
+      return res.status(500).json({
         success: false,
-        message: "No orders found for this user",
+        message: "Internal Server Error",
+        error: err.message,
       });
     }
-
-    const ordersWithItems = await Promise.all(
-      ordersResult.rows.map(async (order) => {
-        const orderItemsResult = await pool.query(
-          "SELECT * FROM order_items WHERE order_id = $1",
-          [order.id]
-        );
-        order.items = orderItemsResult.rows;
-        return order;
-      })
-    );
-
-    return res.status(200).json({
-      success: true,
-      orders: ordersWithItems,
-    });
-  } catch (err) {
-    console.error("❌ Error fetching orders:", err);
-    return res.status(500).json({
-      success: false,
-      message: "Internal Server Error",
-      error: err.message,
-    });
-  }
-};
+  };
+  
