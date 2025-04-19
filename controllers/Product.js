@@ -41,7 +41,7 @@ exports.createProduct = async (req, res) => {
         description,
         category,
         tags: tags ? tags.split(",") : [],
-        images: imageUrls, 
+        image: imageUrls, 
       });
   
       return res.status(201).json({

@@ -89,6 +89,7 @@ exports.editCategory = async (req, res) => {
 exports.getAllCategories = async (req, res) => {
     try {
       const categories = await Category.find({});
+      console.log(categories)
       return res.status(200).json({
         success: true,
         message: "All categories fetched successfully",
