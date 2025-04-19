@@ -8,7 +8,7 @@ const cors = require("cors");
 const database = require("./config/database");
 const { cloudinaryConnect } = require("./config/cloudinary");
 const initPgSchema = require("./models/initPgSchema");
-// const userRoute = require("./routes/userRoute"); 
+const categoryRoute = require("./routes/Category")
 
 dotenv.config(); // ✅ Now works fine
 const PORT = process.env.PORT || 4000;
@@ -42,7 +42,7 @@ app.use(
 cloudinaryConnect();
 
 // Routes
-// app.use("/api/v1/auth", userRoute);
+app.use("/api/v1/category", categoryRoute);
 
 // Default route
 app.get("/", (req, res) => {
